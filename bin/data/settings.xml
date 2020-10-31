@@ -1,0 +1,5 @@
+<incomingPortOsc>12345</incomingPortOsc>
+<outGoingPortOsc>1234</outGoingPortOsc>
+<outgoingIpOSC>127.0.0.1</outgoingIpOSC>
+<midiOutChannel>1</midiOutChannel>
+<frameRate>30<frameRate>

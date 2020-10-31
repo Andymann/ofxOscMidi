@@ -1,0 +1,6 @@
+ofxDatGui
+ofxMidi
+ofxNetworkUtils
+ofxOsc
+ofxPoco
+ofxXmlSettings

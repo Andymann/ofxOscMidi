@@ -1,0 +1,81 @@
+#pragma once
+
+#include "ofMain.h"
+#include "ofxDatGui.h"
+#include "ofxMidi.h"
+#include "ofxXmlSettings.h"
+#include "ofxOsc.h"
+#include "ofxNetworkUtils.h"
+
+class ofApp : public ofBaseApp, public ofxMidiListener{
+
+    public:
+    
+        Poco::Net::HostEntry thisHost;
+        std::string nodeName;
+        Poco::Net::IPAddress publicIp;
+        Poco::Net::NetworkInterface::List siteLocalInterfaces;
+        
+        void setup();
+        void draw();
+        void update();
+        void exit();
+
+        ofTrueTypeFont font;
+        string TITLE = "Midi to OSC v0.1";
+        string txtMsg = "www.Andyland.info";
+    
+        ofxMidiIn midiIn;
+        ofxDatGui* gui;
+    
+        //ofxMidiClock clock; //< clock message parser
+        //bool clockRunning = false; //< is the clock sync running?
+        //unsigned int beats = 0; //< song pos in beats
+        //unsigned int beatsOfficial = 0;
+        //double seconds = 0; //< song pos in seconds, computed from beats
+        //string txtBPM = "BPM:";
+        //string txtAbletonLinkPeers ="Link Peers:";
+        //double bpm = 120; //< song tempo in bpm, computed from clock length
+        //Boolean bReact = true;
+        //Boolean bNewDownbeat = false;
+        //Boolean bWaitingForDownbeat = true;
+        //Boolean bResetNext = false;
+        //int iRetriggerDelay = 50;
+        //string txtMidiClockState  ="MIDI Clock:";
+        //string txtMidiClockBeats = "MIDI Beats:";
+    
+        // MIDI TIMECODE
+        //ofxMidiTimecode timecode; //< timecode message parser
+        //bool timecodeRunning = false; //< is the timecode sync running?
+        //long timecodeTimestamp = 0; //< when last quarter frame message was received
+        //ofxMidiTimecodeFrame frame; //< timecode frame data, ie. H M S frame rate
+    
+    
+        void keyPressed(int key);
+        //void onSliderEvent(ofxDatGuiSliderEvent e);
+        void onDropdownEvent(ofxDatGuiDropdownEvent e);
+        void newMidiMessage(ofxMidiMessage& eventArgs);
+        void setMidiPort(string pPortName);
+    
+        ofxOscReceiver oscReceiver;
+        ofxMidiOut midiOut;
+        string message;
+        stringstream text;
+        
+        ofxMidiMessage midiMessage;
+        ofxOscSender oscSender;
+        ofxXmlSettings xmlSettings;
+        
+        int incomingPortOsc, outGoingPortOsc/*, midiOutChannel*/;
+        string outgoingIpOSC;
+    
+};
+
+class myCustomTheme : public ofxDatGuiTheme{
+public:
+    myCustomTheme(){
+        font.size = 13;
+        //font.file = "path/to/font.ttf";
+        init();
+    }
+};
