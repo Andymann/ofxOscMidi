@@ -2,4 +2,7 @@
 <outGoingPortOsc>1234</outGoingPortOsc>
 <outgoingIpOSC>127.0.0.1</outgoingIpOSC>
 <midiOutChannel>1</midiOutChannel>
-<frameRate>30<frameRate>
+<midiOutPort>IAC-Treiber Bus 1</midiOutPort>
+<midiInPort>IAC-Treiber Bus 1</midiInPort>
+<oscNetwork>127.0.0.1</oscNetwork>
+<testValue>1223</testValue>

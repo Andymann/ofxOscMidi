@@ -11,6 +11,10 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
 
     public:
     
+        const string LBL_MIDI_PORT_IN = "Select MidiPort (In)";
+        const string LBL_MIDI_PORT_OUT = "Select MidiPort (Out)";
+
+    
         Poco::Net::HostEntry thisHost;
         std::string nodeName;
         Poco::Net::IPAddress publicIp;
@@ -55,16 +59,23 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         //void onSliderEvent(ofxDatGuiSliderEvent e);
         void onDropdownEvent(ofxDatGuiDropdownEvent e);
         void newMidiMessage(ofxMidiMessage& eventArgs);
-        void setMidiPort(string pPortName);
+        void setMidiPort_In(string pPortName);
+        void setMidiPort_Out(string pPortName);
+        void parseMsg(ofxOscMessage pMessage);
     
         ofxOscReceiver oscReceiver;
         ofxMidiOut midiOut;
         string message;
         stringstream text;
+    
+        ofxDatGuiDropdown* cmbMidiOut;
+        ofxDatGuiDropdown* cmbMidiIn;
+        ofxDatGuiDropdown* cmbNetwork;
         
         ofxMidiMessage midiMessage;
         ofxOscSender oscSender;
         ofxXmlSettings xmlSettings;
+        void saveSettings();
         
         int incomingPortOsc, outGoingPortOsc/*, midiOutChannel*/;
         string outgoingIpOSC;
