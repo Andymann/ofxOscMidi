@@ -11,19 +11,19 @@ void ofApp::setup()
     nodeName = ofxNet::NetworkUtils::getNodeName();
     publicIp = ofxNet::NetworkUtils::getPublicIPAddress();
     
-    
-    
     ofSetBackgroundColor(0, 0, 0);
     ofSetVerticalSync(true);
     ofSetFrameRate(30);
     ofSetEscapeQuitsApp(false);
     
-    font.load(OF_TTF_MONO, 23);
+    font.load(OF_TTF_MONO, 11);
         
     if (xmlSettings.loadFile("settings.xml")) {
-        ofLogVerbose()<<"XML loaded"<<endl;
+        //ofLogVerbose()<<"XML loaded"<<endl;
+        addLog("XML loaded");
     }else{
-        ofLogVerbose("Could not load xml. Reverting to default values.");
+        //ofLogVerbose("Could not load xml. Reverting to default values.");
+        addLog("Could not load xml. Reverting to default values.");
     }
     
     
@@ -32,6 +32,8 @@ void ofApp::setup()
     outGoingPortOsc    = xmlSettings.getValue("outGoingPortOsc", 12344);
     //midiOutChannel = xmlSettings.getValue("midiOutChannel", 1);
     //outgoingIpOSC = xmlSettings.getValue("outgoingIpOSC", "127.0.0.1");
+    
+    
     string sMidiInPort = xmlSettings.getValue("midiInPort", "");
     string sMidiOutPort = xmlSettings.getValue("midiOutPort", "");
     string sOscNetwork = xmlSettings.getValue("oscNetwork", "");
@@ -105,7 +107,23 @@ void ofApp::setup()
     
     //oscSender.setup(outgoingIpOSC, outGoingPortOsc);
     oscReceiver.setup(incomingPortOsc);
-    message="No messages yet";
+   
+}
+
+
+void ofApp::addLog(string p){
+    if(logText.size()>15){
+        logText.erase( logText.begin() );
+    }
+    logText.push_back( p );
+}
+
+void ofApp::showLog(){
+    string sTmp;
+    for(int i=0; i<logText.size(); i++){
+        sTmp += logText[i] + "\n";
+    }
+    font.drawString(sTmp, 10,cmbNetwork->getY() + 75);
 }
 
 
@@ -160,6 +178,8 @@ void ofApp::draw(){
         
     ofSetColor(100, 100, 100);
     //font.drawString(txtMsg, 10, ofGetHeight()-10);
+    showLog();
+
     
 }
 
@@ -190,12 +210,13 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             break;
         case MIDI_NOTE_ON:
             midiOut.sendNoteOn(message.channel, message.pitch, message.velocity);
-            //ofLogNotice("Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel));
             m.setAddress("/noteOn/" + ofToString(message.pitch));
-            //m.addIntArg(midiMessage.channel);
-            //m.addIntArg(message.pitch);
             m.addIntArg(message.velocity);
             oscSender.sendMessage(m);
+            
+            addLog("Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel));
+            
+            addLog("OSC Out: /noteOn/" + ofToString(message.pitch) + " " + ofToString( message.velocity ) );
             break;
         case MIDI_NOTE_OFF:
             /*
@@ -215,6 +236,10 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             m.addIntArg(0);
             oscSender.sendMessage(m);
             
+            addLog("Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel));
+            
+            addLog("OSC Out: /noteOn/" + ofToString(message.pitch) + " " + ofToString( message.velocity ) );
+            
             break;
         case MIDI_CONTROL_CHANGE:
             midiOut.sendControlChange(message.channel, message.control, message.value);
@@ -224,6 +249,10 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             //m.addIntArg(message.control);
             m.addIntArg(message.value);
             oscSender.sendMessage(m);
+            
+            addLog("Midi Out: ControlChange:" + ofToString(message.channel) + " " + ofToString(message.control) + " " + ofToString(message.velocity));
+            
+            addLog("OSC Out: /ControlChange/" + ofToString(message.control) + "/x " + ofToString( message.value ) );
             break;
         default:
             break;
@@ -232,13 +261,14 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
 
 void ofApp::parseMsg(ofxOscMessage m){
     
-    
     string sAddress = m.getAddress();
-    ofLogNotice( ofToString(sAddress) );
+    //ofLogNotice( ofToString(sAddress) );
     //ofLogNotice( m.getTypeString() );
     //ofLogNotice( ofToString(m.getNumArgs()) );
     //ofLogNotice( "Arg 0:" + ofToString( m.getArgAsInt(0) ));
     ofxMidiMessage midiMsg;
+    
+    addLog("Osc In:" + m.getAddress() + " " + ofToString(m.getArgAsInt(0)) );
     
     //----Leere Nachrichten sind uninteressant
     if( sAddress.empty() ){
@@ -257,7 +287,6 @@ void ofApp::parseMsg(ofxOscMessage m){
     else if(ofToLower(sAddress).rfind("/noteon/",0)==0     ){
         int iPos;
         int iNote;
-        
         try{
             iPos = sAddress.find_last_of("/");
             iNote = stoi(sAddress.substr(iPos+1));
@@ -271,6 +300,7 @@ void ofApp::parseMsg(ofxOscMessage m){
         
         midiOut.sendNoteOn(midiMsg.channel, midiMsg.pitch, midiMsg.velocity);
         
+        addLog("Midi Out: Note On " + ofToString(midiMsg.channel) + " " + ofToString(midiMsg.pitch) + " "+ ofToString(midiMsg.velocity));
         
     }
     else{
@@ -282,7 +312,7 @@ void ofApp::parseMsg(ofxOscMessage m){
         }
         ofLogNotice(m.getAddress() + " " + sTmp);
     }
-
+   
 }
 
 
@@ -297,7 +327,8 @@ void ofApp::setMidiPort_In(string pPortName){
     
     // add ofApp as a listener
     midiIn.addListener(this);
-    cout << "setMidiPoprt: " << pPortName << " Selected" << endl;
+    //cout << "setMidiPoprt: " << pPortName << " Selected" << endl;
+    addLog("setMidi In:" + pPortName);
 }
 
 void ofApp::setMidiPort_Out(string pPortName){
@@ -311,7 +342,8 @@ void ofApp::setMidiPort_Out(string pPortName){
     
     // add ofApp as a listener
     //midiIn.addListener(this);
-    cout << "setMidiPoprt: " << pPortName << " Selected" << endl;
+    //cout << "setMidiPoprt: " << pPortName << " Selected" << endl;
+    addLog("setMidi Out:" + pPortName);
 }
     
 void ofApp::exit(){

@@ -65,17 +65,20 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
     
         ofxOscReceiver oscReceiver;
         ofxMidiOut midiOut;
-        string message;
+        vector<string>logText;
         stringstream text;
     
         ofxDatGuiDropdown* cmbMidiOut;
         ofxDatGuiDropdown* cmbMidiIn;
         ofxDatGuiDropdown* cmbNetwork;
         
+        
         ofxMidiMessage midiMessage;
         ofxOscSender oscSender;
         ofxXmlSettings xmlSettings;
         void saveSettings();
+        void addLog(string p);
+        void showLog();
         
         int incomingPortOsc, outGoingPortOsc/*, midiOutChannel*/;
         string outgoingIpOSC;
@@ -85,7 +88,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
 class myCustomTheme : public ofxDatGuiTheme{
 public:
     myCustomTheme(){
-        font.size = 13;
+        font.size = 12;
         //font.file = "path/to/font.ttf";
         init();
     }
