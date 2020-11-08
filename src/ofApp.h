@@ -13,6 +13,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
     
         const string LBL_MIDI_PORT_IN = "Select MidiPort (In)";
         const string LBL_MIDI_PORT_OUT = "Select MidiPort (Out)";
+        const string LBL_BTN_CLEAR = "Clear Log";
 
     
         Poco::Net::HostEntry thisHost;
@@ -58,6 +59,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         void keyPressed(int key);
         //void onSliderEvent(ofxDatGuiSliderEvent e);
         void onDropdownEvent(ofxDatGuiDropdownEvent e);
+        void onButtonEvent(ofxDatGuiButtonEvent e);
         void newMidiMessage(ofxMidiMessage& eventArgs);
         void setMidiPort_In(string pPortName);
         void setMidiPort_Out(string pPortName);
@@ -71,7 +73,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         ofxDatGuiDropdown* cmbMidiOut;
         ofxDatGuiDropdown* cmbMidiIn;
         ofxDatGuiDropdown* cmbNetwork;
-        
+        ofxDatGuiButton* btnClear;
         
         ofxMidiMessage midiMessage;
         ofxOscSender oscSender;

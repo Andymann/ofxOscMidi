@@ -64,6 +64,7 @@ void ofApp::setup()
     cmbNetwork = gui->addDropdown("Select Network", optsNic);
     gui->addBreak();
     gui->addLabel("OSC IP:" + ofToString(outgoingIpOSC) + " Port(out):" + ofToString(outGoingPortOsc) + " Port(in):" + ofToString(incomingPortOsc) );
+    btnClear = gui->addButton(LBL_BTN_CLEAR);
     
     if(!sMidiInPort.empty()){
         for(int i=0; i<optsMidi_In.size(); i++){
@@ -100,6 +101,7 @@ void ofApp::setup()
     //gui->onSliderEvent(this, &ofApp::onSliderEvent);
     gui->onDropdownEvent(this, &ofApp::onDropdownEvent);
     
+    btnClear->onButtonEvent(this, &ofApp::onButtonEvent);
     //gui->setTheme(new ofxDatGuiThemeSmoke());
     gui->setTheme(new myCustomTheme() );
     gui->setWidth(1024);
@@ -123,7 +125,7 @@ void ofApp::showLog(){
     for(int i=0; i<logText.size(); i++){
         sTmp += logText[i] + "\n";
     }
-    font.drawString(sTmp, 10,cmbNetwork->getY() + 75);
+    font.drawString(sTmp, 10,cmbNetwork->getY() + 100);
 }
 
 
@@ -139,6 +141,10 @@ void ofApp::saveSettings(){
         xmlSettings.setValue("oscNetwork", cmbNetwork->getSelected()->getName() );
         
     xmlSettings.saveFile();
+}
+
+void ofApp::onButtonEvent(ofxDatGuiButtonEvent e){
+    logText.clear();
 }
 
 void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
@@ -200,6 +206,11 @@ void ofApp::keyPressed(int key){
 
 
 void ofApp::newMidiMessage(ofxMidiMessage& message) {
+    
+    string sMidiInMsg;
+    string sMidiOutMsg;
+    string sOscMsg;
+    
     ofxOscMessage m;
     switch(message.status) {
         case MIDI_TIME_CLOCK:
@@ -209,16 +220,20 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
         case MIDI_STOP:
             break;
         case MIDI_NOTE_ON:
+            
             midiOut.sendNoteOn(message.channel, message.pitch, message.velocity);
             m.setAddress("/noteOn/" + ofToString(message.pitch));
             m.addIntArg(message.velocity);
             oscSender.sendMessage(m);
             
-            addLog("Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel));
+            sMidiInMsg = "Midi In: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            addLog("OSC Out: /noteOn/" + ofToString(message.pitch) + " " + ofToString( message.velocity ) );
+            sMidiOutMsg = "Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiOut.getPort());
+            
+            sOscMsg = "OSC Out: /noteOn/" + ofToString(message.pitch) + " " + ofToString( message.velocity );
             break;
         case MIDI_NOTE_OFF:
+            //sMidiOutMsg = "Note Off";
             /*
             midiOut.sendNoteOff(message.channel, message.pitch, message.velocity);
             //ofLogNotice("Note Off:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel));
@@ -229,19 +244,19 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             oscSender.sendMessage(m);
             */
             midiOut.sendNoteOn(message.channel, message.pitch, 0);
-            //ofLogNotice("Note Off:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel));
             m.setAddress("/noteOn/"+ ofToString(message.pitch));
-            //m.addIntArg(midiMessage.channel);
-            //m.addIntArg(message.pitch);
             m.addIntArg(0);
             oscSender.sendMessage(m);
             
-            addLog("Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel));
+            sMidiInMsg = "Midi In: Note Off:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            addLog("OSC Out: /noteOn/" + ofToString(message.pitch) + " " + ofToString( message.velocity ) );
+            sMidiOutMsg = "Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiOut.getPort());
+            
+            sOscMsg="OSC Out: /noteOn/" + ofToString(message.pitch) + " " + ofToString( message.velocity );
             
             break;
         case MIDI_CONTROL_CHANGE:
+            
             midiOut.sendControlChange(message.channel, message.control, message.value);
             //ofLogNotice("Midi CC:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel));
             m.setAddress("/ControlChange/" + ofToString( message.control )+ "/x");
@@ -250,13 +265,19 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             m.addIntArg(message.value);
             oscSender.sendMessage(m);
             
-            addLog("Midi Out: ControlChange:" + ofToString(message.channel) + " " + ofToString(message.control) + " " + ofToString(message.velocity));
+            sMidiInMsg = "Midi In: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            addLog("OSC Out: /ControlChange/" + ofToString(message.control) + "/x " + ofToString( message.value ) );
+            sMidiOutMsg = "Midi Out: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiOut.getPort());;
+            
+            sOscMsg="OSC Out: /ControlChange/" + ofToString(message.control) + "/x " + ofToString( message.value );
             break;
         default:
             break;
     }
+    
+    addLog (sMidiInMsg);
+    addLog (sMidiOutMsg);
+    addLog (sOscMsg);
 }
 
 void ofApp::parseMsg(ofxOscMessage m){
