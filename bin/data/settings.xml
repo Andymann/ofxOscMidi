@@ -1,8 +1,7 @@
 <incomingPortOsc>12345</incomingPortOsc>
 <outGoingPortOsc>1234</outGoingPortOsc>
-<midiOutChannel>1</midiOutChannel>
-<midiOutPort>IAC-Treiber Bus 1</midiOutPort>
-<midiInPort>IAC-Treiber Bus 1</midiInPort>
+<midiOutPort>Midi Fighter 3D</midiOutPort>
+<midiInPort>Midi Fighter 3D</midiInPort>
 <midiThruPort>IAC-Treiber Bus 1</midiThruPort>
-<oscNetwork>192.168.178.255</oscNetwork>
+<oscNetwork>127.0.0.1</oscNetwork>
 <testValue>1223</testValue>

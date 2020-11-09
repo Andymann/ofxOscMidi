@@ -5,11 +5,9 @@
     https://github.com/braitsch/ofxDatGui @braitsch
 */
 
-//----2DO: osc In und out anders formatieren: midi channel als datum in die nachricht
-//----NoteOn/Channel/Pitch/velocity
-//
+
 //----Auswahl: NoteOff sendet NoteOn mit Velocity=0 oder NoteOff oder beides?
-//----Logging bei OSC in; auch messages, die nicht weiterverarbeitet werden.
+//----OSC In /ControlChange
 
 void ofApp::setup()
 {
@@ -34,8 +32,6 @@ void ofApp::setup()
         addLog("Could not load xml. Reverting to default values.");
     }
     
-    
-    
     incomingPortOsc = xmlSettings.getValue("incomingPortOsc", 54321);
     outGoingPortOsc    = xmlSettings.getValue("outGoingPortOsc", 12344);
     
@@ -48,9 +44,8 @@ void ofApp::setup()
     gui = new ofxDatGui( ofxDatGuiAnchor::TOP_LEFT );
     
     // add a dropdown menu //
-    vector<string> optsMidi_In = {midiIn.getInPortList()/*"option - 1", "option - 2", "option - 3", "option - 4"*/};
+    vector<string> optsMidi_In = {midiIn.getInPortList()};
     vector<string> optsMidi_Out = {midiOut.getOutPortList()};
-    
     vector<string> optsMidi_Thru = {midiThru.getOutPortList()};
     
     vector<string> optsNic;
@@ -125,7 +120,7 @@ void ofApp::setup()
     //oscSender.setup(outgoingIpOSC, outGoingPortOsc);
     oscReceiver.setup(incomingPortOsc);
     
-    addLog("OSC IP:" + ofToString(sOscNetwork) + " Port(out):" + ofToString(outGoingPortOsc) + " Port(in):" + ofToString(incomingPortOsc));
+    addLog("OSC:" + ofToString(sOscNetwork) + " Port(out):" + ofToString(outGoingPortOsc) + " Port(in):" + ofToString(incomingPortOsc));
    
 }
 
@@ -158,7 +153,6 @@ void ofApp::saveSettings(){
     xmlSettings.setValue("midiThruPort", sMidiThruPort );
     
     if(!cmbNetwork->getSelected()->getName().empty())
-        ofLogNotice(" "  + sOscNetwork);
         xmlSettings.setValue("oscNetwork", sOscNetwork );
         
     xmlSettings.saveFile();
@@ -176,17 +170,7 @@ void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
         //cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         sOscNetwork=e.target->getLabel();
         oscSender.setup(sOscNetwork, outGoingPortOsc);
-        /*
-        int iPort= xmlSettings.getValue("testValue", 666);
-        ofLogNotice("XML" + ofToString(iPort));
-        xmlSettings.setValue("testValue", 2);
-        //put some some settings into a file
-        if(xmlSettings.saveFile("test.xml")){
-            ofLogNotice("JEPP");
-        }else{
-            ofLogNotice("NOpe");
-        }
-        */
+       
     }else if(sTarget.compare(LBL_MIDI_PORT_IN)==0){
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         setMidiPort_In( e.target->getLabel() );
@@ -214,7 +198,6 @@ void ofApp::draw(){
     //font.drawString(txtMsg, 10, ofGetHeight()-10);
     showLog();
 
-    
 }
 
 
@@ -236,7 +219,7 @@ void ofApp::keyPressed(int key){
 void ofApp::newMidiMessage(ofxMidiMessage& message) {
     
     string sMidiInMsg;
-    string sMidiOutMsg;
+    string sMidiThruMsg;
     string sOscMsg;
     
     ofxOscMessage m;
@@ -251,45 +234,41 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             
             midiThru.sendNoteOn(message.channel, message.pitch, message.velocity);
             
-            m.setAddress("/noteOn/" + ofToString(message.pitch));
+            m.setAddress("/NoteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
             m.addIntArg(message.velocity);
             oscSender.sendMessage(m);
             
             sMidiInMsg = "Midi In: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            sMidiOutMsg = "Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiOut.getPort());
+            sMidiThruMsg = "Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
             
-            sOscMsg = "OSC Out: /noteOn/" + ofToString(message.pitch) + " " + ofToString( message.velocity );
+            sOscMsg = "OSC Out: /noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch) + " " + ofToString( message.velocity );
             break;
         case MIDI_NOTE_OFF:
-            //sMidiOutMsg = "Note Off";
-            /*
-            midiOut.sendNoteOff(message.channel, message.pitch, message.velocity);
-            //ofLogNotice("Note Off:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel));
-            m.setAddress("/noteOff/"+ ofToString(message.pitch));
-            //m.addIntArg(midiMessage.channel);
-            //m.addIntArg(message.pitch);
-            m.addIntArg(message.velocity);
-            oscSender.sendMessage(m);
-            */
+
+            //----instead of sending a dedicated NOTE OFF event we are sending
+            //----a NOTE ON with velocity=0
             midiThru.sendNoteOn(message.channel, message.pitch, 0);
+            //midiThru.sendNoteOff(message.channel, message.pitch, message.velocity);
             
-            m.setAddress("/noteOn/"+ ofToString(message.pitch));
+            
+            
+            m.setAddress("/noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
             m.addIntArg(0);
             oscSender.sendMessage(m);
             
             sMidiInMsg = "Midi In: Note Off:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            sMidiOutMsg = "Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiOut.getPort());
+            sMidiThruMsg = "Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString("0") + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
             
-            sOscMsg="OSC Out: /noteOn/" + ofToString(message.pitch) + " " + ofToString( message.velocity );
+            sOscMsg = "OSC Out: /NoteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch) + " " + ofToString( 0 /*message.velocity*/ );
             
             break;
         case MIDI_CONTROL_CHANGE:
             
             midiThru.sendControlChange(message.channel, message.control, message.value);
             
-            m.setAddress("/ControlChange/" + ofToString( message.control )+ "/x");
+            m.setAddress("/ControlChange/" + ofToString(message.channel) + "/"  + ofToString( message.control )+ "/x");
             //m.addIntArg(message.channel);
             //m.addIntArg(message.control);
             m.addIntArg(message.value);
@@ -297,38 +276,37 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             
             sMidiInMsg = "Midi In: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            sMidiOutMsg = "Midi Out: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiOut.getPort());;
+            sMidiThruMsg = "Midi Out: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
             
-            sOscMsg="OSC Out: /ControlChange/" + ofToString(message.control) + "/x " + ofToString( message.value );
+            sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) + "/x " + ofToString( message.value );
             break;
         default:
             break;
     }
     
     addLog (sMidiInMsg);
-    addLog (sMidiOutMsg);
+    addLog (sMidiThruMsg);
     addLog (sOscMsg);
 }
 
 void ofApp::parseMsg(ofxOscMessage m){
     
-    string sAddress = m.getAddress();
-    //ofLogNotice( ofToString(sAddress) );
-    //ofLogNotice( m.getTypeString() );
-    //ofLogNotice( ofToString(m.getNumArgs()) );
-    //ofLogNotice( "Arg 0:" + ofToString( m.getArgAsInt(0) ));
     ofxMidiMessage midiMsg;
-    
-    addLog("Osc In:" + m.getAddress() + " " + ofToString(m.getArgAsInt(0)) );
+    string sAddress = m.getAddress();
     
     //----Leere Nachrichten sind uninteressant
     if( sAddress.empty() ){
         return;
     }
+
+    if(m.getNumArgs()<1){
+        return;
+    }
+    
+    addLog("Osc In:" + m.getAddress() + " " + ofToString(m.getArgAsInt(0)) );
     
     if(sAddress.back()=='/'){
-        sAddress=sAddress.substr(0,sAddress.length()-1/*sAddress.find_last_of("/")*/);
-        
+        sAddress=sAddress.substr(0,sAddress.length()-1);
     }
     
     if(ofToLower(sAddress).rfind("/noteoff/",0)==0     ){
@@ -338,22 +316,37 @@ void ofApp::parseMsg(ofxOscMessage m){
     else if(ofToLower(sAddress).rfind("/noteon/",0)==0     ){
         int iPos;
         int iNote;
+        int iChannel;
         try{
+            //----von hinten
             iPos = sAddress.find_last_of("/");
             iNote = stoi(sAddress.substr(iPos+1));
         }catch(const ExceptionInfo e){
             return;
         }
         
-        midiMsg.channel = 3;
+        try{
+            //----von vorne
+            iPos = ofToLower(sAddress).find("noteon/");
+            sAddress = sAddress.substr(iPos+7);
+            iPos = sAddress.find_last_of("/");
+            iChannel = stoi(sAddress.substr(iPos-1));
+            
+        }catch(const ExceptionInfo e){
+            return;
+        }
+        
+        midiMsg.channel = iChannel;
         midiMsg.pitch = iNote;
         midiMsg.velocity = m.getArgAsInt(0);
         
         midiOut.sendNoteOn(midiMsg.channel, midiMsg.pitch, midiMsg.velocity);
         midiThru.sendNoteOn(midiMsg.channel, midiMsg.pitch, midiMsg.velocity);
         
-        addLog("Midi Out: Note On " + ofToString(midiMsg.channel) + " " + ofToString(midiMsg.pitch) + " "+ ofToString(midiMsg.velocity));
         
+        addLog("Midi Out: Note On:" + ofToString(midiMsg.pitch) + " " + ofToString("0") + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiOut.getPort()));
+        
+        addLog("Midi Out: Note On:" + ofToString(midiMsg.pitch) + " " + ofToString("0") + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiThru.getPort()));
     }
     else{
         //ofLogVerbose()<<message<<endl;
@@ -362,7 +355,7 @@ void ofApp::parseMsg(ofxOscMessage m){
         for (int j=0;j<i;j++){
             sTmp += m.getArgAsString(j) + " ";
         }
-        ofLogNotice(m.getAddress() + " " + sTmp);
+        addLog(m.getAddress() + " " + sTmp);
     }
    
 }
