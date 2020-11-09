@@ -5,16 +5,24 @@
     https://github.com/braitsch/ofxDatGui @braitsch
 */
 
+//----2DO: osc In und out anders formatieren: midi channel als datum in die nachricht
+//----NoteOn/Channel/Pitch/velocity
+//
+//----Auswahl: NoteOff sendet NoteOn mit Velocity=0 oder NoteOff oder beides?
+//----Logging bei OSC in; auch messages, die nicht weiterverarbeitet werden.
+
 void ofApp::setup()
 {
+    /*
     thisHost = ofxNet::NetworkUtils::getThisHost();
     nodeName = ofxNet::NetworkUtils::getNodeName();
     publicIp = ofxNet::NetworkUtils::getPublicIPAddress();
-    
+    */
     ofSetBackgroundColor(0, 0, 0);
     ofSetVerticalSync(true);
     ofSetFrameRate(30);
     ofSetEscapeQuitsApp(false);
+    ofSetWindowTitle(TITLE);
     
     font.load(OF_TTF_MONO, 11);
         
@@ -30,17 +38,12 @@ void ofApp::setup()
     
     incomingPortOsc = xmlSettings.getValue("incomingPortOsc", 54321);
     outGoingPortOsc    = xmlSettings.getValue("outGoingPortOsc", 12344);
-    //midiOutChannel = xmlSettings.getValue("midiOutChannel", 1);
-    //outgoingIpOSC = xmlSettings.getValue("outgoingIpOSC", "127.0.0.1");
     
-    
-    string sMidiInPort = xmlSettings.getValue("midiInPort", "");
-    string sMidiOutPort = xmlSettings.getValue("midiOutPort", "");
-    string sOscNetwork = xmlSettings.getValue("oscNetwork", "");
-    
-    midiOut.openVirtualPort("ofxOscMidi Out");
-    
-    
+    sMidiInPort = xmlSettings.getValue("midiInPort", "");
+    sMidiOutPort = xmlSettings.getValue("midiOutPort", "");
+    sMidiThruPort = xmlSettings.getValue("midiThruPort", "");
+    sOscNetwork = xmlSettings.getValue("oscNetwork", "");
+  
 // instantiate and position the gui //
     gui = new ofxDatGui( ofxDatGuiAnchor::TOP_LEFT );
     
@@ -48,23 +51,25 @@ void ofApp::setup()
     vector<string> optsMidi_In = {midiIn.getInPortList()/*"option - 1", "option - 2", "option - 3", "option - 4"*/};
     vector<string> optsMidi_Out = {midiOut.getOutPortList()};
     
+    vector<string> optsMidi_Thru = {midiThru.getOutPortList()};
+    
     vector<string> optsNic;
     siteLocalInterfaces = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
 
     optsNic.push_back("127.0.0.1");
     for (const auto& interface: siteLocalInterfaces)
     {
-        //optsNic.push_back( interface.address().toString() );
         optsNic.push_back( interface.broadcastAddress().toString() );
     }
 
     
     cmbMidiIn = gui->addDropdown(LBL_MIDI_PORT_IN, optsMidi_In);
     cmbMidiOut = gui->addDropdown(LBL_MIDI_PORT_OUT, optsMidi_Out);
+    cmbMidiThru = gui->addDropdown(LBL_MIDI_PORT_THRU, optsMidi_Thru);
     cmbNetwork = gui->addDropdown("Select Network", optsNic);
     gui->addBreak();
-    gui->addLabel("OSC IP:" + ofToString(outgoingIpOSC) + " Port(out):" + ofToString(outGoingPortOsc) + " Port(in):" + ofToString(incomingPortOsc) );
     btnClear = gui->addButton(LBL_BTN_CLEAR);
+    
     
     if(!sMidiInPort.empty()){
         for(int i=0; i<optsMidi_In.size(); i++){
@@ -86,12 +91,22 @@ void ofApp::setup()
         }
     }
     
+    if(!sMidiThruPort.empty()){
+        for(int i=0; i<optsMidi_Thru.size(); i++){
+            if(optsMidi_Thru[i] == sMidiThruPort){
+                cmbMidiThru->select(i);
+                setMidiPort_Thru(sMidiThruPort);
+                break;
+            }
+        }
+    }
+    
     if(!sOscNetwork.empty()){
         for(int i=0; i<optsNic.size(); i++){
             if(optsNic[i] == sOscNetwork){
                 cmbNetwork->select(i);
-                outgoingIpOSC=sOscNetwork;
-                oscSender.setup(outgoingIpOSC, outGoingPortOsc);
+                //sOscNetwork=sOscNetwork;
+                oscSender.setup(sOscNetwork, outGoingPortOsc);
                 break;
             }
         }
@@ -109,6 +124,8 @@ void ofApp::setup()
     
     //oscSender.setup(outgoingIpOSC, outGoingPortOsc);
     oscReceiver.setup(incomingPortOsc);
+    
+    addLog("OSC IP:" + ofToString(sOscNetwork) + " Port(out):" + ofToString(outGoingPortOsc) + " Port(in):" + ofToString(incomingPortOsc));
    
 }
 
@@ -132,13 +149,17 @@ void ofApp::showLog(){
 void ofApp::saveSettings(){
     //ofLogNotice(ofToString( cmbMidiOut->getSelected()->getName() ));
     if(!cmbMidiIn->getSelected()->getName().empty())
-    xmlSettings.setValue("midiInPort", cmbMidiIn->getSelected()->getName() );
+    xmlSettings.setValue("midiInPort", sMidiInPort );
     
     if(!cmbMidiOut->getSelected()->getName().empty())
-    xmlSettings.setValue("midiOutPort", cmbMidiOut->getSelected()->getName() );
+    xmlSettings.setValue("midiOutPort", sMidiOutPort );
+    
+    if(!cmbMidiThru->getSelected()->getName().empty())
+    xmlSettings.setValue("midiThruPort", sMidiThruPort );
     
     if(!cmbNetwork->getSelected()->getName().empty())
-        xmlSettings.setValue("oscNetwork", cmbNetwork->getSelected()->getName() );
+        ofLogNotice(" "  + sOscNetwork);
+        xmlSettings.setValue("oscNetwork", sOscNetwork );
         
     xmlSettings.saveFile();
 }
@@ -153,9 +174,8 @@ void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
     string sTarget = ofToString(e.target->getName());
     if(sTarget.compare("Select Network")==0){
         //cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
-        outgoingIpOSC=e.target->getLabel();
-        oscSender.setup(outgoingIpOSC, outGoingPortOsc);
-        
+        sOscNetwork=e.target->getLabel();
+        oscSender.setup(sOscNetwork, outGoingPortOsc);
         /*
         int iPort= xmlSettings.getValue("testValue", 666);
         ofLogNotice("XML" + ofToString(iPort));
@@ -170,9 +190,17 @@ void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
     }else if(sTarget.compare(LBL_MIDI_PORT_IN)==0){
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         setMidiPort_In( e.target->getLabel() );
+        sMidiInPort = e.target->getLabel();
+        
     }else if(sTarget.compare(LBL_MIDI_PORT_OUT)==0){
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         setMidiPort_Out( e.target->getLabel() );
+        sMidiOutPort = e.target->getLabel();
+        
+    }else if(sTarget.compare(LBL_MIDI_PORT_THRU)==0){
+        cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
+        setMidiPort_Thru( e.target->getLabel() );
+        sMidiThruPort = e.target->getLabel();
     }
 
 }
@@ -221,7 +249,8 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             break;
         case MIDI_NOTE_ON:
             
-            midiOut.sendNoteOn(message.channel, message.pitch, message.velocity);
+            midiThru.sendNoteOn(message.channel, message.pitch, message.velocity);
+            
             m.setAddress("/noteOn/" + ofToString(message.pitch));
             m.addIntArg(message.velocity);
             oscSender.sendMessage(m);
@@ -243,7 +272,8 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             m.addIntArg(message.velocity);
             oscSender.sendMessage(m);
             */
-            midiOut.sendNoteOn(message.channel, message.pitch, 0);
+            midiThru.sendNoteOn(message.channel, message.pitch, 0);
+            
             m.setAddress("/noteOn/"+ ofToString(message.pitch));
             m.addIntArg(0);
             oscSender.sendMessage(m);
@@ -257,8 +287,8 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             break;
         case MIDI_CONTROL_CHANGE:
             
-            midiOut.sendControlChange(message.channel, message.control, message.value);
-            //ofLogNotice("Midi CC:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel));
+            midiThru.sendControlChange(message.channel, message.control, message.value);
+            
             m.setAddress("/ControlChange/" + ofToString( message.control )+ "/x");
             //m.addIntArg(message.channel);
             //m.addIntArg(message.control);
@@ -320,6 +350,7 @@ void ofApp::parseMsg(ofxOscMessage m){
         midiMsg.velocity = m.getArgAsInt(0);
         
         midiOut.sendNoteOn(midiMsg.channel, midiMsg.pitch, midiMsg.velocity);
+        midiThru.sendNoteOn(midiMsg.channel, midiMsg.pitch, midiMsg.velocity);
         
         addLog("Midi Out: Note On " + ofToString(midiMsg.channel) + " " + ofToString(midiMsg.pitch) + " "+ ofToString(midiMsg.velocity));
         
@@ -349,22 +380,19 @@ void ofApp::setMidiPort_In(string pPortName){
     // add ofApp as a listener
     midiIn.addListener(this);
     //cout << "setMidiPoprt: " << pPortName << " Selected" << endl;
-    addLog("setMidi In:" + pPortName);
+    addLog("Midi In:" + pPortName);
 }
 
 void ofApp::setMidiPort_Out(string pPortName){
     midiOut.closePort();
-    //midiOut.removeListener(this);
-    
     midiOut.openPort( pPortName ); // open a virtual port
-    //midiIn.ignoreTypes(false, // sysex  <-- don't ignore timecode messages!
-      //                 false, // timing <-- don't ignore clock messages!
-        //               true); // sensing
-    
-    // add ofApp as a listener
-    //midiIn.addListener(this);
-    //cout << "setMidiPoprt: " << pPortName << " Selected" << endl;
-    addLog("setMidi Out:" + pPortName);
+    addLog("Midi Out:" + pPortName);
+}
+
+void ofApp::setMidiPort_Thru(string pPortName){
+    midiThru.closePort();
+    midiThru.openPort( pPortName ); // open a virtual port
+    addLog("Midi Thru:" + pPortName);
 }
     
 void ofApp::exit(){

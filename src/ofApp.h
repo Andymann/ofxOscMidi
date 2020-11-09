@@ -13,6 +13,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
     
         const string LBL_MIDI_PORT_IN = "Select MidiPort (In)";
         const string LBL_MIDI_PORT_OUT = "Select MidiPort (Out)";
+    const string LBL_MIDI_PORT_THRU = "Select MidiPort (Thru)";
         const string LBL_BTN_CLEAR = "Clear Log";
 
     
@@ -27,10 +28,14 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         void exit();
 
         ofTrueTypeFont font;
-        string TITLE = "Midi to OSC v0.1";
+        string TITLE = "ofxOscMidi v0.1";
         string txtMsg = "www.Andyland.info";
     
-        ofxMidiIn midiIn;
+    string sMidiInPort;
+    string sMidiOutPort;
+    string sMidiThruPort;
+    string sOscNetwork;
+        
         ofxDatGui* gui;
     
         //ofxMidiClock clock; //< clock message parser
@@ -63,15 +68,20 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         void newMidiMessage(ofxMidiMessage& eventArgs);
         void setMidiPort_In(string pPortName);
         void setMidiPort_Out(string pPortName);
+    void setMidiPort_Thru(string pPortName);
         void parseMsg(ofxOscMessage pMessage);
     
         ofxOscReceiver oscReceiver;
         ofxMidiOut midiOut;
+        ofxMidiOut midiThru;
+        ofxMidiIn midiIn;
+        
         vector<string>logText;
         stringstream text;
     
         ofxDatGuiDropdown* cmbMidiOut;
         ofxDatGuiDropdown* cmbMidiIn;
+    ofxDatGuiDropdown* cmbMidiThru;
         ofxDatGuiDropdown* cmbNetwork;
         ofxDatGuiButton* btnClear;
         
@@ -83,7 +93,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         void showLog();
         
         int incomingPortOsc, outGoingPortOsc/*, midiOutChannel*/;
-        string outgoingIpOSC;
+        //string outgoingIpOSC;
     
 };
 
