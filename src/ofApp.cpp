@@ -347,6 +347,41 @@ void ofApp::parseMsg(ofxOscMessage m){
         addLog("Midi Out: Note On:" + ofToString(midiMsg.pitch) + " " + ofToString("0") + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiOut.getPort()));
         
         addLog("Midi Out: Note On:" + ofToString(midiMsg.pitch) + " " + ofToString("0") + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiThru.getPort()));
+   
+    }else if(ofToLower(sAddress).rfind("/controlchange/",0)==0     ){
+        int iPos;
+        int iNote;
+        int iChannel;
+        try{
+            //----von hinten
+            iPos = sAddress.find_last_of("/");
+            iNote = stoi(sAddress.substr(iPos+1));
+        }catch(const ExceptionInfo e){
+            return;
+        }
+        
+        try{
+            //----von vorne
+            iPos = ofToLower(sAddress).find("controlchange/");
+            sAddress = sAddress.substr(iPos+7);
+            iPos = sAddress.find_last_of("/");
+            iChannel = stoi(sAddress.substr(iPos-1));
+            
+        }catch(const ExceptionInfo e){
+            return;
+        }
+        
+        midiMsg.channel = iChannel;
+        midiMsg.control = iNote;
+        midiMsg.value = m.getArgAsInt(0);
+        
+        midiOut.sendControlChange(midiMsg.channel, midiMsg.control, midiMsg.value);
+        midiThru.sendControlChange(midiMsg.channel, midiMsg.control, midiMsg.value);
+        
+        
+        addLog("Midi Out: CC:" + ofToString(midiMsg.control) + " " + ofToString(midiMsg.value) + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiOut.getPort()));
+        
+        addLog("Midi Out: Note On:" + ofToString(midiMsg.control) + " " + ofToString(midiMsg.value) + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiThru.getPort()));
     }
     else{
         //ofLogVerbose()<<message<<endl;
