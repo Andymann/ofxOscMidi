@@ -321,7 +321,7 @@ void ofApp::parseMsg(ofxOscMessage m){
             //----von hinten
             iPos = sAddress.find_last_of("/");
             iNote = stoi(sAddress.substr(iPos+1));
-        }catch(const ExceptionInfo e){
+        }catch(...){
             return;
         }
         
@@ -332,7 +332,7 @@ void ofApp::parseMsg(ofxOscMessage m){
             iPos = sAddress.find_last_of("/");
             iChannel = stoi(sAddress.substr(iPos-1));
             
-        }catch(const ExceptionInfo e){
+        }catch(...){
             return;
         }
         
@@ -356,18 +356,18 @@ void ofApp::parseMsg(ofxOscMessage m){
             //----von hinten
             iPos = sAddress.find_last_of("/");
             iNote = stoi(sAddress.substr(iPos+1));
-        }catch(const ExceptionInfo e){
+        }catch(...){
             return;
         }
         
         try{
             //----von vorne
             iPos = ofToLower(sAddress).find("controlchange/");
-            sAddress = sAddress.substr(iPos+7);
+            sAddress = sAddress.substr(iPos+14);
             iPos = sAddress.find_last_of("/");
             iChannel = stoi(sAddress.substr(iPos-1));
             
-        }catch(const ExceptionInfo e){
+        }catch(...){
             return;
         }
         
