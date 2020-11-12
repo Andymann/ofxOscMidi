@@ -134,6 +134,11 @@ void ofApp::addLog(string p){
 
 void ofApp::showLog(){
     string sTmp;
+    string sOscInfo="OSC Format: NoteOn/Channel/Pitch  ControlChange/Channel/Control";
+    font.drawString(sOscInfo, 10,cmbNetwork->getY() + 75);
+    
+    
+    
     for(int i=0; i<logText.size(); i++){
         sTmp += logText[i] + "\n";
     }
