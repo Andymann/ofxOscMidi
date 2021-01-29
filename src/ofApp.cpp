@@ -112,7 +112,7 @@ void ofApp::setup()
     gui->onDropdownEvent(this, &ofApp::onDropdownEvent);
     
     btnClear->onButtonEvent(this, &ofApp::onButtonEvent);
-    //gui->setTheme(new ofxDatGuiThemeSmoke());
+    //gui->setTheme(new ofxDatGuiThemeMidnight());
     gui->setTheme(new myCustomTheme() );
     gui->setWidth(1024);
     
@@ -134,7 +134,8 @@ void ofApp::addLog(string p){
 
 void ofApp::showLog(){
     string sTmp;
-    string sOscInfo="OSC Format: NoteOn/Channel/Pitch  ControlChange/Channel/Control";
+    string sOscInfo="OSC Format: NoteOn/Channel/Pitch  ControlChange/Channel/Value\n\r";
+    sOscInfo += "OSC In:" + ofToString(incomingPortOsc) + "   OSC Out:" + ofToString(outGoingPortOsc);
     font.drawString(sOscInfo, 10,cmbNetwork->getY() + 75);
     
     
@@ -142,7 +143,7 @@ void ofApp::showLog(){
     for(int i=0; i<logText.size(); i++){
         sTmp += logText[i] + "\n";
     }
-    font.drawString(sTmp, 10,cmbNetwork->getY() + 100);
+    font.drawString(sTmp, 10,cmbNetwork->getY() + 120);
 }
 
 
@@ -226,6 +227,7 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
     string sMidiInMsg;
     string sMidiThruMsg;
     string sOscMsg;
+    bool bLogMsg = false;
     
     ofxOscMessage m;
     switch(message.status) {
@@ -236,7 +238,7 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
         case MIDI_STOP:
             break;
         case MIDI_NOTE_ON:
-            
+            bLogMsg = true;
             midiThru.sendNoteOn(message.channel, message.pitch, message.velocity);
             
             m.setAddress("/NoteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
@@ -250,13 +252,11 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             sOscMsg = "OSC Out: /noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch) + " " + ofToString( message.velocity );
             break;
         case MIDI_NOTE_OFF:
-
+            bLogMsg = true;
             //----instead of sending a dedicated NOTE OFF event we are sending
             //----a NOTE ON with velocity=0
             midiThru.sendNoteOn(message.channel, message.pitch, 0);
             //midiThru.sendNoteOff(message.channel, message.pitch, message.velocity);
-            
-            
             
             m.setAddress("/noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
             m.addIntArg(0);
@@ -270,7 +270,7 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             
             break;
         case MIDI_CONTROL_CHANGE:
-            
+            bLogMsg = true;
             midiThru.sendControlChange(message.channel, message.control, message.value);
             
             m.setAddress("/ControlChange/" + ofToString(message.channel) + "/"  + ofToString( message.control )+ "/x");
@@ -289,9 +289,12 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             break;
     }
     
-    addLog (sMidiInMsg);
-    addLog (sMidiThruMsg);
-    addLog (sOscMsg);
+    if(bLogMsg){
+        addLog (sMidiInMsg);
+        addLog (sMidiThruMsg);
+        addLog (sOscMsg);
+    }
+        
 }
 
 void ofApp::parseMsg(ofxOscMessage m){
