@@ -39,6 +39,9 @@ void ofApp::setup()
     sMidiOutPort = xmlSettings.getValue("midiOutPort", "");
     sMidiThruPort = xmlSettings.getValue("midiThruPort", "");
     sOscNetwork = xmlSettings.getValue("oscNetwork", "");
+    
+    string sNormalizeOsc = xmlSettings.getValue("oscNormalize", "true");
+    bNormalizeOsc = (ofToLower(sNormalizeOsc) == "true") ? true : false;
   
 // instantiate and position the gui //
     gui = new ofxDatGui( ofxDatGuiAnchor::TOP_LEFT );
@@ -62,6 +65,9 @@ void ofApp::setup()
     cmbMidiOut = gui->addDropdown(LBL_MIDI_PORT_OUT, optsMidi_Out);
     cmbMidiThru = gui->addDropdown(LBL_MIDI_PORT_THRU, optsMidi_Thru);
     cmbNetwork = gui->addDropdown("Select Network", optsNic);
+    
+    btnNormalize = gui->addToggle(LBL_BTN_NORMALIZE, bNormalizeOsc);
+    
     gui->addBreak();
     btnClear = gui->addButton(LBL_BTN_CLEAR);
     
@@ -107,15 +113,24 @@ void ofApp::setup()
         }
     }
     
+    colBG = btnNormalize->getTheme()->color.background;
+    btnNormalize->setChecked( bNormalizeOsc);
+    
+    
+    
     // once the gui has been assembled, register callbacks to listen for component specific events
     //gui->onSliderEvent(this, &ofApp::onSliderEvent);
     gui->onDropdownEvent(this, &ofApp::onDropdownEvent);
     
+    btnNormalize->onToggleEvent(this, &ofApp::onToggleEvent);
     btnClear->onButtonEvent(this, &ofApp::onButtonEvent);
+    
     //gui->setTheme(new ofxDatGuiThemeMidnight());
     gui->setTheme(new myCustomTheme() );
     gui->setWidth(1024);
     
+    
+
     
     //oscSender.setup(outgoingIpOSC, outGoingPortOsc);
     oscReceiver.setup(incomingPortOsc);
@@ -160,12 +175,23 @@ void ofApp::saveSettings(){
     
     if(!cmbNetwork->getSelected()->getName().empty())
         xmlSettings.setValue("oscNetwork", sOscNetwork );
+    
+    xmlSettings.setValue("oscNormalize", bNormalizeOsc ? "true" : "false");
         
     xmlSettings.saveFile();
 }
 
 void ofApp::onButtonEvent(ofxDatGuiButtonEvent e){
-    logText.clear();
+    if(e.target->getLabel() == LBL_BTN_CLEAR){
+        logText.clear();
+    }
+}
+
+void ofApp::onToggleEvent(ofxDatGuiToggleEvent e){
+    if(e.target->getLabel() == LBL_BTN_NORMALIZE){
+        bNormalizeOsc = !bNormalizeOsc;
+        btnNormalize->setChecked( bNormalizeOsc );
+    }
 }
 
 void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
@@ -196,24 +222,33 @@ void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
 }
 
 void ofApp::draw(){
-    
-    int iHeight = ofGetWindowHeight();
-    int iWidth = ofGetWindowWidth();
+    if( bNormalizeOsc ){
+        btnNormalize->setBackgroundColor( colToggleActive );
+    }else{
+        btnNormalize->setBackgroundColor( colBG );
+    }
+    //int iHeight = ofGetWindowHeight();
+    //int iWidth = ofGetWindowWidth();
         
     ofSetColor(100, 100, 100);
     //font.drawString(txtMsg, 10, ofGetHeight()-10);
     showLog();
+    
+    //btnNormalize->draw();
 
 }
 
 
 
 void ofApp::update(){
+    btnNormalize->update();
     while(oscReceiver.hasWaitingMessages()){
         ofxOscMessage m;
         oscReceiver.getNextMessage(m);
         parseMsg( m );
     }
+    
+    //btnNormalize->update();
 }
 
 void ofApp::keyPressed(int key){
@@ -242,7 +277,14 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             midiThru.sendNoteOn(message.channel, message.pitch, message.velocity);
             
             m.setAddress("/NoteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
+            
+            if(bNormalizeOsc){
+                m.addFloatArg(message.value/127.);
+            }else{
+                m.addIntArg(message.value);
+            }
             m.addIntArg(message.velocity);
+            
             oscSender.sendMessage(m);
             
             sMidiInMsg = "Midi In: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
@@ -259,7 +301,12 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             //midiThru.sendNoteOff(message.channel, message.pitch, message.velocity);
             
             m.setAddress("/noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
-            m.addIntArg(0);
+            
+            if(bNormalizeOsc){
+                m.addFloatArg(0.);
+            }else{
+                m.addIntArg(0);
+            }
             oscSender.sendMessage(m);
             
             sMidiInMsg = "Midi In: Note Off:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
@@ -276,7 +323,11 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             m.setAddress("/ControlChange/" + ofToString(message.channel) + "/"  + ofToString( message.control )+ "/x");
             //m.addIntArg(message.channel);
             //m.addIntArg(message.control);
-            m.addIntArg(message.value);
+            if(bNormalizeOsc){
+                m.addFloatArg(message.value/127.);
+            }else{
+                m.addIntArg(message.value);
+            }
             oscSender.sendMessage(m);
             
             sMidiInMsg = "Midi In: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
@@ -347,6 +398,10 @@ void ofApp::parseMsg(ofxOscMessage m){
         midiMsg.channel = iChannel;
         midiMsg.pitch = iNote;
         midiMsg.velocity = m.getArgAsInt(0);
+        
+        if(bNormalizeOsc){
+            midiMsg.velocity *= 127;
+        }
         
         midiOut.sendNoteOn(midiMsg.channel, midiMsg.pitch, midiMsg.velocity);
         midiThru.sendNoteOn(midiMsg.channel, midiMsg.pitch, midiMsg.velocity);

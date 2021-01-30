@@ -15,6 +15,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         const string LBL_MIDI_PORT_OUT = "Select MidiPort (Out)";
         const string LBL_MIDI_PORT_THRU = "Select MidiPort (Thru)";
         const string LBL_BTN_CLEAR = "Clear Log";
+        const string LBL_BTN_NORMALIZE = "Normalize OSC";
 
     
         Poco::Net::HostEntry thisHost;
@@ -28,7 +29,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         void exit();
 
         ofTrueTypeFont font;
-        string TITLE = "ofxOscMidi v0.2";
+        string TITLE = "ofxOscMidi v0.4";
         string txtMsg = "www.Andyland.info";
     
     string sMidiInPort;
@@ -36,6 +37,9 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
     string sMidiThruPort;
     string sOscNetwork;
         
+    ofColor colBG;
+    ofColor colToggleActive = ofColor(0, 127, 0);
+    
         ofxDatGui* gui;
         
     
@@ -43,6 +47,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         //void onSliderEvent(ofxDatGuiSliderEvent e);
         void onDropdownEvent(ofxDatGuiDropdownEvent e);
         void onButtonEvent(ofxDatGuiButtonEvent e);
+        void onToggleEvent(ofxDatGuiToggleEvent e);
         void newMidiMessage(ofxMidiMessage& eventArgs);
         void setMidiPort_In(string pPortName);
         void setMidiPort_Out(string pPortName);
@@ -62,6 +67,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         ofxDatGuiDropdown* cmbMidiThru;
         ofxDatGuiDropdown* cmbNetwork;
         ofxDatGuiButton* btnClear;
+        ofxDatGuiToggle* btnNormalize;
         
         ofxMidiMessage midiMessage;
         ofxOscSender oscSender;
@@ -71,7 +77,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         void showLog();
         
         int incomingPortOsc, outGoingPortOsc/*, midiOutChannel*/;
-        //string outgoingIpOSC;
+        bool bNormalizeOsc;
     
 };
 
