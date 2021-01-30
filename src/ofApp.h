@@ -10,7 +10,8 @@
 class ofApp : public ofBaseApp, public ofxMidiListener{
 
     public:
-    
+        
+        const string LBL_NONE = "[none]";
         const string LBL_CMD_MIDI_IN = "Midi In to OSC: ";
         const string LBL_CMD_MIDI_OUT = "OSC to Midi Out: ";
         const string LBL_CMD_MIDI_THRU = "Midi THRU: ";
@@ -43,6 +44,8 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         
     ofColor colBG;
     ofColor colToggleActive = ofColor(39, 135, 214);
+    ofColor colLabelEnabled;
+    ofColor colLabelDisabled = ofColor(75, 75, 75);
     
         ofxDatGui* gui;
         
@@ -82,6 +85,10 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         
         int incomingPortOsc, outGoingPortOsc/*, midiOutChannel*/;
         bool bNormalizeOsc;
+    
+    bool bMidiIn_Active;
+    bool bMidiOut_Active;
+    
     
 };
 

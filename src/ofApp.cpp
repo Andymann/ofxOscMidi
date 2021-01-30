@@ -11,11 +11,7 @@
 
 void ofApp::setup()
 {
-    /*
-    thisHost = ofxNet::NetworkUtils::getThisHost();
-    nodeName = ofxNet::NetworkUtils::getNodeName();
-    publicIp = ofxNet::NetworkUtils::getPublicIPAddress();
-    */
+
     ofSetBackgroundColor(0, 0, 0);
     ofSetVerticalSync(true);
     ofSetFrameRate(30);
@@ -25,10 +21,8 @@ void ofApp::setup()
     font.load(OF_TTF_MONO, 11);
         
     if (xmlSettings.loadFile("settings.xml")) {
-        //ofLogVerbose()<<"XML loaded"<<endl;
         addLog("XML loaded");
     }else{
-        //ofLogVerbose("Could not load xml. Reverting to default values.");
         addLog("Could not load xml. Reverting to default values.");
     }
     
@@ -43,13 +37,17 @@ void ofApp::setup()
     string sNormalizeOsc = xmlSettings.getValue("oscNormalize", "true");
     bNormalizeOsc = (ofToLower(sNormalizeOsc) == "true") ? true : false;
   
-// instantiate and position the gui //
+    // instantiate and position the gui //
     gui = new ofxDatGui( ofxDatGuiAnchor::TOP_LEFT );
     
     // add a dropdown menu //
     vector<string> optsMidi_In = {midiIn.getInPortList()};
     vector<string> optsMidi_Out = {midiOut.getOutPortList()};
     vector<string> optsMidi_Thru = {midiThru.getOutPortList()};
+    
+    optsMidi_In.push_back(LBL_NONE);
+    optsMidi_Out.push_back(LBL_NONE);
+    //optsMidi_Thru.push_back(LBL_NONE);
     
     vector<string> optsNic;
     siteLocalInterfaces = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
@@ -71,26 +69,36 @@ void ofApp::setup()
     btnClear = gui->addButton(LBL_BTN_CLEAR);
     
     
-    if(!sMidiInPort.empty()){
+    if((!sMidiInPort.empty()) && (sMidiInPort.compare(LBL_NONE)!=0) ){
         for(int i=0; i<optsMidi_In.size(); i++){
             if(optsMidi_In[i] == sMidiInPort){
                 cmbMidiIn->select(i);
                 setMidiPort_In(sMidiInPort);
                 cmbMidiIn->setLabel(LBL_CMD_MIDI_IN + sMidiInPort);
+                bMidiIn_Active=true;
                 break;
             }
         }
+    }else{
+        cout << "LoadFromSettings: Midi in disabled";
+        cmbMidiIn->setLabel(LBL_CMD_MIDI_IN + sMidiInPort);
+        bMidiIn_Active = false;
     }
     
-    if(!sMidiOutPort.empty()){
+    if((!sMidiOutPort.empty()) && (sMidiOutPort.compare(LBL_NONE)!=0)){
         for(int i=0; i<optsMidi_Out.size(); i++){
             if(optsMidi_Out[i] == sMidiOutPort){
                 cmbMidiOut->select(i);
                 setMidiPort_Out(sMidiOutPort);
                 cmbMidiOut->setLabel(LBL_CMD_MIDI_OUT + sMidiOutPort);
+                bMidiOut_Active=true;
                 break;
             }
         }
+    }else{
+        cout << "LoadFromSettings: Midi Out disabled";
+        cmbMidiOut->setLabel(LBL_CMD_MIDI_OUT + sMidiOutPort);
+        bMidiOut_Active = false;
     }
     
     if(!sMidiThruPort.empty()){
@@ -116,6 +124,8 @@ void ofApp::setup()
     }
     
     colBG = btnNormalize->getTheme()->color.background;
+    colLabelEnabled = cmbMidiThru->getTheme()->color.label;
+    
     btnNormalize->setChecked( bNormalizeOsc);
     
     
@@ -167,13 +177,13 @@ void ofApp::showLog(){
 void ofApp::saveSettings(){
     //ofLogNotice(ofToString( cmbMidiOut->getSelected()->getName() ));
     if(!cmbMidiIn->getSelected()->getName().empty())
-    xmlSettings.setValue("midiInPort", sMidiInPort );
+        xmlSettings.setValue("midiInPort", sMidiInPort );
     
     if(!cmbMidiOut->getSelected()->getName().empty())
-    xmlSettings.setValue("midiOutPort", sMidiOutPort );
+        xmlSettings.setValue("midiOutPort", sMidiOutPort );
     
     if(!cmbMidiThru->getSelected()->getName().empty())
-    xmlSettings.setValue("midiThruPort", sMidiThruPort );
+        xmlSettings.setValue("midiThruPort", sMidiThruPort );
     
     if(!cmbNetwork->getSelected()->getName().empty())
         xmlSettings.setValue("oscNetwork", sOscNetwork );
@@ -207,21 +217,36 @@ void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
        
     }else if(sTarget.compare(LBL_MIDI_PORT_IN)==0){
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
-        setMidiPort_In( e.target->getLabel() );
-        sMidiInPort = e.target->getLabel();
-        cmbMidiIn->setLabel("Midi In:" + sMidiInPort);
+        if(e.target->getLabel().compare(LBL_NONE)!=0 ){
+            bMidiIn_Active = true;
+            setMidiPort_In( e.target->getLabel() );
+            sMidiInPort = e.target->getLabel();
+            cmbMidiIn->setLabel(LBL_CMD_MIDI_IN + sMidiInPort);
+        }else{
+            sMidiInPort = e.target->getLabel();
+            cmbMidiIn->setLabel(LBL_CMD_MIDI_IN + sMidiInPort);
+            bMidiIn_Active = false;
+        }
         
     }else if(sTarget.compare(LBL_MIDI_PORT_OUT)==0){
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
-        setMidiPort_Out( e.target->getLabel() );
-        sMidiOutPort = e.target->getLabel();
-        cmbMidiOut->setLabel("Midi Out:" + sMidiInPort);
+        
+        if(e.target->getLabel().compare(LBL_NONE)!=0 ){
+            bMidiOut_Active = true;
+            setMidiPort_Out( e.target->getLabel() );
+            sMidiOutPort = e.target->getLabel();
+            cmbMidiOut->setLabel(LBL_CMD_MIDI_OUT + sMidiOutPort);
+        }else{
+            sMidiOutPort = e.target->getLabel();
+            cmbMidiOut->setLabel(LBL_CMD_MIDI_OUT + sMidiOutPort);
+            bMidiIn_Active = false;
+        }
         
     }else if(sTarget.compare(LBL_MIDI_PORT_THRU)==0){
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         setMidiPort_Thru( e.target->getLabel() );
         sMidiThruPort = e.target->getLabel();
-        cmbMidiThru->setLabel("Midi Thru:" + sMidiInPort);
+        cmbMidiThru->setLabel(LBL_CMD_MIDI_THRU + sMidiThruPort);
     }
 
 }
@@ -232,6 +257,15 @@ void ofApp::draw(){
     }else{
         btnNormalize->setBackgroundColor( colBG );
     }
+    
+    //----No Midi IN: NoMidi THRU
+    cmbMidiThru->setEnabled(bMidiIn_Active);
+    if(bMidiIn_Active){
+        cmbMidiThru->setLabelColor(colLabelEnabled);
+    }else{
+        cmbMidiThru->setLabelColor(colLabelDisabled);
+    }
+   
     //int iHeight = ofGetWindowHeight();
     //int iWidth = ofGetWindowWidth();
         
@@ -263,6 +297,12 @@ void ofApp::keyPressed(int key){
 
 
 void ofApp::newMidiMessage(ofxMidiMessage& message) {
+    
+    
+    if(!bMidiIn_Active){
+        cout << "Midi In disabled";
+        return;
+    }
     
     string sMidiInMsg;
     string sMidiThruMsg;
@@ -368,6 +408,11 @@ void ofApp::parseMsg(ofxOscMessage m){
     }
     
     addLog("Osc In:" + m.getAddress() + " " + ofToString(m.getArgAsInt(0)) );
+    
+    if(!bMidiOut_Active){
+        cout << "Midi Out disabled";
+        return;
+    }
     
     if(sAddress.back()=='/'){
         sAddress=sAddress.substr(0,sAddress.length()-1);
