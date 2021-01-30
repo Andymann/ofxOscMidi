@@ -152,7 +152,7 @@ void ofApp::addLog(string p){
 void ofApp::showLog(){
     string sTmp;
     string sOscInfo="OSC Format: NoteOn/Channel/Pitch  ControlChange/Channel/Value\n\r";
-    sOscInfo += "OSC In Port:" + ofToString(incomingPortOsc) + "   OSC Out Port:" + ofToString(outGoingPortOsc);
+    sOscInfo += "OSC In Port:" + ofToString(incomingPortOsc) + "   OSC Out Port:" + ofToString(outGoingPortOsc) + " (see settings.xml)";
     font.drawString(sOscInfo, 10,cmbNetwork->getY() + 100);
     
     
