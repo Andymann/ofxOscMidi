@@ -76,7 +76,7 @@ void ofApp::setup()
             if(optsMidi_In[i] == sMidiInPort){
                 cmbMidiIn->select(i);
                 setMidiPort_In(sMidiInPort);
-                cmbMidiIn->setLabel("Midi In:" + sMidiInPort);
+                cmbMidiIn->setLabel(LBL_CMD_MIDI_IN + sMidiInPort);
                 break;
             }
         }
@@ -87,7 +87,7 @@ void ofApp::setup()
             if(optsMidi_Out[i] == sMidiOutPort){
                 cmbMidiOut->select(i);
                 setMidiPort_Out(sMidiOutPort);
-                cmbMidiOut->setLabel("Midi Out:" + sMidiOutPort);
+                cmbMidiOut->setLabel(LBL_CMD_MIDI_OUT + sMidiOutPort);
                 break;
             }
         }
@@ -98,7 +98,7 @@ void ofApp::setup()
             if(optsMidi_Thru[i] == sMidiThruPort){
                 cmbMidiThru->select(i);
                 setMidiPort_Thru(sMidiThruPort);
-                cmbMidiThru->setLabel("Midi Thru:" + sMidiThruPort);
+                cmbMidiThru->setLabel(LBL_CMD_MIDI_THRU + sMidiThruPort);
                 break;
             }
         }
@@ -152,7 +152,7 @@ void ofApp::addLog(string p){
 void ofApp::showLog(){
     string sTmp;
     string sOscInfo="OSC Format: NoteOn/Channel/Pitch  ControlChange/Channel/Value\n\r";
-    sOscInfo += "OSC In:" + ofToString(incomingPortOsc) + "   OSC Out:" + ofToString(outGoingPortOsc);
+    sOscInfo += "OSC In Port:" + ofToString(incomingPortOsc) + "   OSC Out Port:" + ofToString(outGoingPortOsc);
     font.drawString(sOscInfo, 10,cmbNetwork->getY() + 100);
     
     

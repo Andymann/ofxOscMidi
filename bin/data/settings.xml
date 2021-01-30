@@ -4,5 +4,5 @@
 <midiInPort>IAC-Treiber Midi-Track-Info</midiInPort>
 <midiThruPort>IAC-Treiber Bus 1</midiThruPort>
 <oscNetwork>127.0.0.1</oscNetwork>
-<oscNormalize>false</oscNormalize>
+<oscNormalize>true</oscNormalize>
 <testValue>1223</testValue>
