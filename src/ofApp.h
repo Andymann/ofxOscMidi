@@ -14,6 +14,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         const string LBL_MIDI_PORT_IN = "Select MidiPort (In)";
         const string LBL_MIDI_PORT_OUT = "Select MidiPort (Out)";
         const string LBL_MIDI_PORT_THRU = "Select MidiPort (Thru)";
+        const String LBL_NETWORK = "Select Network";
         const string LBL_BTN_CLEAR = "Clear Log";
         const string LBL_BTN_NORMALIZE = "Normalize OSC";
 

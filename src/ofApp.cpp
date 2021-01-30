@@ -60,11 +60,10 @@ void ofApp::setup()
         optsNic.push_back( interface.broadcastAddress().toString() );
     }
 
-    
     cmbMidiIn = gui->addDropdown(LBL_MIDI_PORT_IN, optsMidi_In);
     cmbMidiOut = gui->addDropdown(LBL_MIDI_PORT_OUT, optsMidi_Out);
     cmbMidiThru = gui->addDropdown(LBL_MIDI_PORT_THRU, optsMidi_Thru);
-    cmbNetwork = gui->addDropdown("Select Network", optsNic);
+    cmbNetwork = gui->addDropdown(LBL_NETWORK, optsNic);
     
     btnNormalize = gui->addToggle(LBL_BTN_NORMALIZE, bNormalizeOsc);
     
@@ -77,6 +76,7 @@ void ofApp::setup()
             if(optsMidi_In[i] == sMidiInPort){
                 cmbMidiIn->select(i);
                 setMidiPort_In(sMidiInPort);
+                cmbMidiIn->setLabel("Midi In:" + sMidiInPort);
                 break;
             }
         }
@@ -87,6 +87,7 @@ void ofApp::setup()
             if(optsMidi_Out[i] == sMidiOutPort){
                 cmbMidiOut->select(i);
                 setMidiPort_Out(sMidiOutPort);
+                cmbMidiOut->setLabel("Midi Out:" + sMidiOutPort);
                 break;
             }
         }
@@ -97,6 +98,7 @@ void ofApp::setup()
             if(optsMidi_Thru[i] == sMidiThruPort){
                 cmbMidiThru->select(i);
                 setMidiPort_Thru(sMidiThruPort);
+                cmbMidiThru->setLabel("Midi Thru:" + sMidiThruPort);
                 break;
             }
         }
@@ -151,14 +153,14 @@ void ofApp::showLog(){
     string sTmp;
     string sOscInfo="OSC Format: NoteOn/Channel/Pitch  ControlChange/Channel/Value\n\r";
     sOscInfo += "OSC In:" + ofToString(incomingPortOsc) + "   OSC Out:" + ofToString(outGoingPortOsc);
-    font.drawString(sOscInfo, 10,cmbNetwork->getY() + 75);
+    font.drawString(sOscInfo, 10,cmbNetwork->getY() + 100);
     
     
     
     for(int i=0; i<logText.size(); i++){
         sTmp += logText[i] + "\n";
     }
-    font.drawString(sTmp, 10,cmbNetwork->getY() + 120);
+    font.drawString(sTmp, 10,cmbNetwork->getY() + 145);
 }
 
 
@@ -196,10 +198,10 @@ void ofApp::onToggleEvent(ofxDatGuiToggleEvent e){
 
 void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
 {
-    cout << "onDropdownEvent: " << e.target->getName() << " Selected" << endl;
+    //cout << "onDropdownEvent: " << e.target->getName() << " Selected" << endl;
     string sTarget = ofToString(e.target->getName());
-    if(sTarget.compare("Select Network")==0){
-        //cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
+    if(sTarget.compare(LBL_NETWORK)==0){
+        cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         sOscNetwork=e.target->getLabel();
         oscSender.setup(sOscNetwork, outGoingPortOsc);
        
@@ -207,16 +209,19 @@ void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         setMidiPort_In( e.target->getLabel() );
         sMidiInPort = e.target->getLabel();
+        cmbMidiIn->setLabel("Midi In:" + sMidiInPort);
         
     }else if(sTarget.compare(LBL_MIDI_PORT_OUT)==0){
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         setMidiPort_Out( e.target->getLabel() );
         sMidiOutPort = e.target->getLabel();
+        cmbMidiOut->setLabel("Midi Out:" + sMidiInPort);
         
     }else if(sTarget.compare(LBL_MIDI_PORT_THRU)==0){
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         setMidiPort_Thru( e.target->getLabel() );
         sMidiThruPort = e.target->getLabel();
+        cmbMidiThru->setLabel("Midi Thru:" + sMidiInPort);
     }
 
 }
