@@ -13,7 +13,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         
         const string LBL_NONE = "[none]";
         const string LBL_CMD_MIDI_IN = "Midi In to OSC: ";
-        const string LBL_CMD_MIDI_OUT = "OSC to Midi Out: ";
+        const string LBL_CMD_MIDI_OUT = "Midi Out from OSC: ";
         const string LBL_CMD_MIDI_THRU = "Midi THRU: ";
         const string LBL_MIDI_PORT_IN = "Select MidiPort (In)";
         const string LBL_MIDI_PORT_OUT = "Select MidiPort (Out)";
@@ -88,7 +88,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
     
     bool bMidiIn_Active;
     bool bMidiOut_Active;
-    
+    bool bMidiThru_Active;
     
 };
 

@@ -47,6 +47,7 @@ void ofApp::setup()
     
     optsMidi_In.push_back(LBL_NONE);
     optsMidi_Out.push_back(LBL_NONE);
+    optsMidi_Thru.push_back(LBL_NONE);
     //optsMidi_Thru.push_back(LBL_NONE);
     
     vector<string> optsNic;
@@ -101,15 +102,20 @@ void ofApp::setup()
         bMidiOut_Active = false;
     }
     
-    if(!sMidiThruPort.empty()){
+    if((!sMidiThruPort.empty()) && (sMidiThruPort.compare(LBL_NONE)!=0)){
         for(int i=0; i<optsMidi_Thru.size(); i++){
             if(optsMidi_Thru[i] == sMidiThruPort){
                 cmbMidiThru->select(i);
                 setMidiPort_Thru(sMidiThruPort);
                 cmbMidiThru->setLabel(LBL_CMD_MIDI_THRU + sMidiThruPort);
+                bMidiThru_Active=true;
                 break;
             }
         }
+    }else{
+        cout << "LoadFromSettings: Midi Thru disabled";
+        cmbMidiThru->setLabel(LBL_CMD_MIDI_THRU + sMidiThruPort);
+        bMidiThru_Active = false;
     }
     
     if(!sOscNetwork.empty()){
@@ -153,7 +159,7 @@ void ofApp::setup()
 
 
 void ofApp::addLog(string p){
-    if(logText.size()>15){
+    if(logText.size()>13){
         logText.erase( logText.begin() );
     }
     logText.push_back( p );
@@ -239,14 +245,26 @@ void ofApp::onDropdownEvent(ofxDatGuiDropdownEvent e)
         }else{
             sMidiOutPort = e.target->getLabel();
             cmbMidiOut->setLabel(LBL_CMD_MIDI_OUT + sMidiOutPort);
-            bMidiIn_Active = false;
+            bMidiOut_Active = false;
         }
         
     }else if(sTarget.compare(LBL_MIDI_PORT_THRU)==0){
+        /*
         cout << "onDropdownEvent: " << e.target->getLabel() << " Selected" << endl;
         setMidiPort_Thru( e.target->getLabel() );
         sMidiThruPort = e.target->getLabel();
         cmbMidiThru->setLabel(LBL_CMD_MIDI_THRU + sMidiThruPort);
+        */
+        if(e.target->getLabel().compare(LBL_NONE)!=0 ){
+            bMidiThru_Active = true;
+            setMidiPort_Thru( e.target->getLabel() );
+            sMidiThruPort = e.target->getLabel();
+            cmbMidiThru->setLabel(LBL_CMD_MIDI_THRU + sMidiThruPort);
+        }else{
+            sMidiThruPort = e.target->getLabel();
+            cmbMidiThru->setLabel(LBL_CMD_MIDI_THRU + sMidiThruPort);
+            bMidiThru_Active = false;
+        }
     }
 
 }
@@ -300,7 +318,8 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
     
     
     if(!bMidiIn_Active){
-        cout << "Midi In disabled";
+        //cout << "Midi In disabled";
+        message.clear();
         return;
     }
     
@@ -319,14 +338,21 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             break;
         case MIDI_NOTE_ON:
             bLogMsg = true;
-            midiThru.sendNoteOn(message.channel, message.pitch, message.velocity);
+            if(bMidiThru_Active){
+                midiThru.sendNoteOn(message.channel, message.pitch, message.velocity);
+                sMidiThruMsg = "Midi Thru: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
+            }else{
+                //sMidiThruMsg = "Midi Thru set to " + LBL_NONE;
+            }
             
             m.setAddress("/NoteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
             
             if(bNormalizeOsc){
-                m.addFloatArg(message.value/127.);
+                m.addFloatArg(message.velocity/127.);
+                sOscMsg = "OSC Out: /noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch) + " " + ofToString( message.velocity/127. );
             }else{
-                m.addIntArg(message.value);
+                m.addIntArg(message.velocity);
+                sOscMsg = "OSC Out: /noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch) + " " + ofToString( message.velocity );
             }
             m.addIntArg(message.velocity);
             
@@ -334,16 +360,20 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             
             sMidiInMsg = "Midi In: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            sMidiThruMsg = "Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
             
-            sOscMsg = "OSC Out: /noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch) + " " + ofToString( message.velocity );
             break;
         case MIDI_NOTE_OFF:
             bLogMsg = true;
             //----instead of sending a dedicated NOTE OFF event we are sending
             //----a NOTE ON with velocity=0
-            midiThru.sendNoteOn(message.channel, message.pitch, 0);
+            //midiThru.sendNoteOn(message.channel, message.pitch, 0);
             //midiThru.sendNoteOff(message.channel, message.pitch, message.velocity);
+            if(bMidiThru_Active){
+                midiThru.sendNoteOn(message.channel, message.pitch, 0);
+                sMidiThruMsg = "Midi Thru: Note On:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
+            }else{
+                //sMidiThruMsg = "Midi Thru set to " + LBL_NONE;
+            }
             
             m.setAddress("/noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
             
@@ -352,42 +382,44 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
             }else{
                 m.addIntArg(0);
             }
+            sOscMsg = "OSC Out: /NoteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch) + " " + ofToString( 0 /*message.velocity*/ );
+            
             oscSender.sendMessage(m);
             
             sMidiInMsg = "Midi In: Note Off:" + ofToString(message.pitch) + " " + ofToString(message.velocity) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            sMidiThruMsg = "Midi Out: Note On:" + ofToString(message.pitch) + " " + ofToString("0") + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
-            
-            sOscMsg = "OSC Out: /NoteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch) + " " + ofToString( 0 /*message.velocity*/ );
-            
             break;
         case MIDI_CONTROL_CHANGE:
             bLogMsg = true;
-            midiThru.sendControlChange(message.channel, message.control, message.value);
-            
-            m.setAddress("/ControlChange/" + ofToString(message.channel) + "/"  + ofToString( message.control )+ "/x");
-            //m.addIntArg(message.channel);
-            //m.addIntArg(message.control);
+            //midiThru.sendControlChange(message.channel, message.control, message.value);
+            if(bMidiThru_Active){
+                midiThru.sendControlChange(message.channel, message.control, message.value);
+                sMidiThruMsg = "Midi Thru: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
+            }else{
+                //sMidiThruMsg = /*"Midi THRU set to " + LBL_NONE;*/ LOG_NOTHING
+            }
+            m.setAddress("/ControlChange/" + ofToString(message.channel) + "/"  + ofToString( message.control ) /*+ "/x"*/);
             if(bNormalizeOsc){
                 m.addFloatArg(message.value/127.);
+                sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) /*+ "/x "*/ + ofToString( message.value/127.0 );
             }else{
                 m.addIntArg(message.value);
+                sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) /*+ "/x "*/ + ofToString( message.value );
             }
             oscSender.sendMessage(m);
             
             sMidiInMsg = "Midi In: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiIn.getInPortName(midiIn.getPort());
             
-            sMidiThruMsg = "Midi Out: Control Change:" + ofToString(message.control) + " " + ofToString(message.value) + " Channel:" + ofToString(message.channel) + " " + midiOut.getOutPortName(midiThru.getPort());
-            
-            sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) + "/x " + ofToString( message.value );
             break;
         default:
             break;
     }
     
     if(bLogMsg){
-        addLog (sMidiInMsg);
-        addLog (sMidiThruMsg);
+        if(bMidiIn_Active)
+            addLog (sMidiInMsg);
+        if(bMidiThru_Active)
+            addLog (sMidiThruMsg);
         addLog (sOscMsg);
     }
         
@@ -407,10 +439,14 @@ void ofApp::parseMsg(ofxOscMessage m){
         return;
     }
     
-    addLog("Osc In:" + m.getAddress() + " " + ofToString(m.getArgAsInt(0)) );
+    if(bNormalizeOsc){
+        addLog("Osc In:" + m.getAddress() + " " + ofToString(m.getArgAsFloat(0)) );
+    }else{
+        addLog("Osc In:" + m.getAddress() + " " + ofToString(m.getArgAsInt(0)) );
+    }
     
     if(!bMidiOut_Active){
-        cout << "Midi Out disabled";
+        //cout << "Midi Out disabled";
         return;
     }
     
@@ -469,7 +505,9 @@ void ofApp::parseMsg(ofxOscMessage m){
             //----von hinten
             iPos = sAddress.find_last_of("/");
             iNote = stoi(sAddress.substr(iPos+1));
+            cout << "something something";
         }catch(...){
+            cout << "catch something";
             return;
         }
         
@@ -486,15 +524,19 @@ void ofApp::parseMsg(ofxOscMessage m){
         
         midiMsg.channel = iChannel;
         midiMsg.control = iNote;
-        midiMsg.value = m.getArgAsInt(0);
+        
+        if(bNormalizeOsc){
+            midiMsg.value = m.getArgAsFloat(0)*127;
+        }else{
+            midiMsg.value = m.getArgAsInt(0);
+        }
         
         midiOut.sendControlChange(midiMsg.channel, midiMsg.control, midiMsg.value);
-        midiThru.sendControlChange(midiMsg.channel, midiMsg.control, midiMsg.value);
+        //midiThru.sendControlChange(midiMsg.channel, midiMsg.control, midiMsg.value);
         
         
-        addLog("Midi Out: CC:" + ofToString(midiMsg.control) + " " + ofToString(midiMsg.value) + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiOut.getPort()));
+        addLog("Midi Out: CC:" + ofToString(midiMsg.control) + " Val:" + ofToString(midiMsg.value) + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiOut.getPort()));
         
-        addLog("Midi Out: Note On:" + ofToString(midiMsg.control) + " " + ofToString(midiMsg.value) + " Channel:" + ofToString(midiMsg.channel) + " " + midiOut.getOutPortName(midiThru.getPort()));
     }
     else{
         //ofLogVerbose()<<message<<endl;
