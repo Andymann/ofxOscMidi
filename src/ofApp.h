@@ -90,6 +90,13 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
     bool bMidiOut_Active;
     bool bMidiThru_Active;
     
+    void processOSC_NoteOn(ofxOscMessage m);
+    void processOSC_ControlChange(ofxOscMessage m);
+    
+    void processMidi_NoteOn(ofxMidiMessage& message);
+    void processMidi_NoteOff(ofxMidiMessage& message);
+    void processMidi_ControlChange(ofxMidiMessage& message);
+    
 };
 
 class myCustomTheme : public ofxDatGuiTheme{

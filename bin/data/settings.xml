@@ -1,7 +1,7 @@
 <incomingPortOsc>12345</incomingPortOsc>
 <outGoingPortOsc>1234</outGoingPortOsc>
-<midiInPort>Launchkey Mini MK3 MIDI Port</midiInPort>
-<midiOutPort>IAC-Treiber Bus 1</midiOutPort>
+<midiInPort>[none]</midiInPort>
+<midiOutPort>[none]</midiOutPort>
 <midiThruPort>[none]</midiThruPort>
 <oscNetwork>127.0.0.1</oscNetwork>
 <oscNormalize>true</oscNormalize>
