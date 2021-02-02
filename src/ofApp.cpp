@@ -50,15 +50,22 @@ void ofApp::setup()
     optsMidi_Thru.push_back(LBL_NONE);
     //optsMidi_Thru.push_back(LBL_NONE);
     
-    vector<string> optsNic;
-    siteLocalInterfaces = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
 
+    vector<string> optsNic;
     optsNic.push_back("127.0.0.1");
-    for (const auto& interface: siteLocalInterfaces)
-    {
+    
+#ifdef TARGET_OS_OSX
+    siteLocalInterfaces = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
+    for (const auto& interface: siteLocalInterfaces){
         optsNic.push_back( interface.broadcastAddress().toString() );
     }
-
+#endif
+    
+#ifdef TARGET_OS_WIN64
+    publicIp = ofxNet::NetworkUtils::getPublicIPAddress();
+    optsNic.push_back( publicIp.toString() );
+#endif
+    
     cmbMidiIn = gui->addDropdown(LBL_MIDI_PORT_IN, optsMidi_In);
     cmbMidiOut = gui->addDropdown(LBL_MIDI_PORT_OUT, optsMidi_Out);
     cmbMidiThru = gui->addDropdown(LBL_MIDI_PORT_THRU, optsMidi_Thru);
@@ -372,10 +379,10 @@ void ofApp::processMidi_ControlChange(ofxMidiMessage& message){
     m.setAddress("/ControlChange/" + ofToString(message.channel) + "/"  + ofToString( message.control ) /*+ "/x"*/);
     if(bNormalizeOsc){
         m.addFloatArg(message.value/127.);
-        sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) /*+ "/x "*/ + ofToString( message.value/127.0 );
+        sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) + " " + ofToString( message.value/127.0 );
     }else{
         m.addIntArg(message.value);
-        sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) /*+ "/x "*/ + ofToString( message.value );
+        sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) + " " + ofToString( message.value );
     }
     oscSender.sendMessage(m);
     
