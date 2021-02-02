@@ -54,14 +54,14 @@ void ofApp::setup()
     vector<string> optsNic;
     optsNic.push_back("127.0.0.1");
     
-#ifdef TARGET_OS_OSX
+#ifdef __APPLE__
     siteLocalInterfaces = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
     for (const auto& interface: siteLocalInterfaces){
         optsNic.push_back( interface.broadcastAddress().toString() );
     }
 #endif
     
-#ifdef TARGET_OS_WIN64
+#ifdef _WIN32
     publicIp = ofxNet::NetworkUtils::getPublicIPAddress();
     optsNic.push_back( publicIp.toString() );
 #endif
