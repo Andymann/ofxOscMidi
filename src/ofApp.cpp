@@ -59,11 +59,14 @@ void ofApp::setup()
     for (const auto& interface: siteLocalInterfaces){
         optsNic.push_back( interface.broadcastAddress().toString() );
     }
-#endif
-    
-#ifdef _WIN32
-    publicIp = ofxNet::NetworkUtils::getPublicIPAddress();
-    optsNic.push_back( publicIp.toString() );
+#elif _WIN32//TARGET_OS_WIN64
+    thisHost = ofxNet::NetworkUtils::getThisHost();
+    vector<Poco::Net::IPAddress> t = thisHost.addresses();
+    //publicIp = ofxNet::NetworkUtils::getPublicIPAddress();
+    //optsNic.push_back( publicIp.toString() );
+    for(int i=0; i<t.size();i++){
+        optsNic.push_back(t[i].toString());
+    }
 #endif
     
     cmbMidiIn = gui->addDropdown(LBL_MIDI_PORT_IN, optsMidi_In);
