@@ -58,9 +58,16 @@ void ofApp::setup()
     ofxNet::NetworkUtils::NetworkInterfaceList siteLocalInterfaces = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
     
     
-    for (const auto& interface: siteLocalInterfaces){
-        optsNic.push_back( interface.broadcastAddress().toString() );
+    vector<ofxNet::NetworkUtils::NetworkInterface> t = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
+    
+    for(int i=0; i<t.size(); i++){
+        optsNic.push_back(t[i].broadcastAddress().toString());
     }
+    
+    
+    //for (/*const auto&*/ofxNet::NetworkUtils::NetworkInterface interface: siteLocalInterfaces){
+    //    optsNic.push_back( interface.broadcastAddress().toString() );
+    //}
 /*
 #elif _WIN32//TARGET_OS_WIN64
     thisHost = ofxNet::NetworkUtils::getThisHost();
