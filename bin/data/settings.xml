@@ -3,6 +3,6 @@
 <midiInPort>[none]</midiInPort>
 <midiOutPort>[none]</midiOutPort>
 <midiThruPort>[none]</midiThruPort>
-<oscNetwork>127.0.0.1</oscNetwork>
+<oscNetwork>192.168.178.255</oscNetwork>
 <oscNormalize>true</oscNormalize>
 <testValue>1223</testValue>
