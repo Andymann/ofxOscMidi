@@ -54,29 +54,18 @@ void ofApp::setup()
     vector<string> optsNic;
     optsNic.push_back("127.0.0.1");
     
-//#ifdef __APPLE__
-    ofxNet::NetworkUtils::NetworkInterfaceList siteLocalInterfaces = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
-    
-    
+ 
     vector<ofxNet::NetworkUtils::NetworkInterface> t = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
     
     for(int i=0; i<t.size(); i++){
         optsNic.push_back(t[i].broadcastAddress().toString());
     }
-    
-    
-    //for (/*const auto&*/ofxNet::NetworkUtils::NetworkInterface interface: siteLocalInterfaces){
-    //    optsNic.push_back( interface.broadcastAddress().toString() );
-    //}
+
 /*
-#elif _WIN32//TARGET_OS_WIN64
-    thisHost = ofxNet::NetworkUtils::getThisHost();
-    vector<Poco::Net::IPAddress> t = thisHost.addresses();
-    //publicIp = ofxNet::NetworkUtils::getPublicIPAddress();
-    //optsNic.push_back( publicIp.toString() );
-    for(int i=0; i<t.size();i++){
-        optsNic.push_back(t[i].toString());
-    }
+#ifdef __APPLE__
+ 
+#elif _WIN32
+
 #endif
 */
     cmbMidiIn = gui->addDropdown(LBL_MIDI_PORT_IN, optsMidi_In);
