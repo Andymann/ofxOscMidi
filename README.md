@@ -10,8 +10,8 @@ Settings are stored in 'settings.xml' upon termination.
   
 OSC messages are formatted like this:  
   
-&nbsp;&nbsp;&nbsp;NoteOn/[Channel]/[Pitch].  
-&nbsp;&nbsp;&nbsp;ControlChange/[Channel]/[value].  
+&nbsp;&nbsp;&nbsp;noteOn/[Channel]/[Pitch].  
+&nbsp;&nbsp;&nbsp;controlChange/[Channel]/[value].  
   
 <img src="image.png" alt="drawing" width="500"/>  
   
