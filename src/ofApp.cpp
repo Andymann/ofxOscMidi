@@ -176,7 +176,7 @@ void ofApp::addLog(string p){
 
 void ofApp::showLog(){
     string sTmp;
-    string sOscInfo="OSC Format: noteOn/Channel/Pitch  ControlChange/Channel/Value\n\r";
+    string sOscInfo="OSC Format: noteOn/Channel/Pitch  controlChange/Channel/Value\n\r";
     sOscInfo += "OSC In Port:" + ofToString(incomingPortOsc) + "   OSC Out Port:" + ofToString(outGoingPortOsc) + " (see settings.xml)";
     font.drawString(sOscInfo, 10,cmbNetwork->getY() + 100);
     
@@ -379,13 +379,13 @@ void ofApp::processMidi_ControlChange(ofxMidiMessage& message){
     }else{
         //sMidiThruMsg = /*"Midi THRU set to " + LBL_NONE;*/ LOG_NOTHING
     }
-    m.setAddress("/ControlChange/" + ofToString(message.channel) + "/"  + ofToString( message.control ) /*+ "/x"*/);
+    m.setAddress("/controlChange/" + ofToString(message.channel) + "/"  + ofToString( message.control ) /*+ "/x"*/);
     if(bNormalizeOsc){
         m.addFloatArg(message.value/127.);
-        sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) + " " + ofToString( message.value/127.0 );
+        sOscMsg="OSC Out: /controlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) + " " + ofToString( message.value/127.0 );
     }else{
         m.addIntArg(message.value);
-        sOscMsg="OSC Out: /ControlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) + " " + ofToString( message.value );
+        sOscMsg="OSC Out: /controlChange/" + ofToString(message.channel) + "/"  + ofToString(message.control) + " " + ofToString( message.value );
     }
     oscSender.sendMessage(m);
     
