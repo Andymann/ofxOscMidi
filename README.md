@@ -1,6 +1,9 @@
 # ofxOscMidi
 Midi/OSC helper based on openFrameworks.  
   
+  
+Important: Windows binaries ("exe-files") are not updated any more. If you want the latest version on Windows you have to compile it yourself.  
+  
 Midi In -> OSC Out.  
 OSC In -> Midi Out.  
 Midi In -> Midi Thru.  

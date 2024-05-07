@@ -441,23 +441,29 @@ void ofApp::newMidiMessage(ofxMidiMessage& message) {
 void ofApp::processOSC_NoteOn(ofxOscMessage m){
     ofxMidiMessage midiMsg;
     
-    int iPos;
+    int iPos1;
+    int iPos2;
     int iNote;
     int iChannel;
     try{
         //----von hinten
-        iPos = m.getAddress().find_last_of("/");
-        iNote = stoi(m.getAddress().substr(iPos+1));
+        iPos1 = m.getAddress().find_last_of("/");
+        iNote = stoi(m.getAddress().substr(iPos1+1));
     }catch(...){
         return;
     }
     
     try{
         //----von vorne
-        iPos = ofToLower(m.getAddress()).find("noteon/");
-        m.setAddress( m.getAddress().substr(iPos+7) );
-        iPos = m.getAddress().find_last_of("/");
-        iChannel = stoi(m.getAddress().substr(iPos-1));
+        iPos1 = ofToLower(m.getAddress()).find("noteon/");
+        m.setAddress( m.getAddress().substr(iPos1+7) );
+        iPos2 = m.getAddress().find_last_of("/");
+        string sChannel = m.getAddress().substr(iPos1-1, iPos2);
+        iChannel = stoi(m.getAddress().substr(iPos1-1, iPos2));
+        if((iChannel<1)||(iChannel>16)){
+            return;
+        }
+        
         
     }catch(...){
         return;
@@ -484,13 +490,14 @@ void ofApp::processOSC_ControlChange(ofxOscMessage m){
     
     ofxMidiMessage midiMsg;
     
-    int iPos;
+    int iPos1;
+    int iPos2;
     int iNote;
     int iChannel;
     try{
         //----von hinten
-        iPos = m.getAddress().find_last_of("/");
-        iNote = stoi(m.getAddress().substr(iPos+1));
+        iPos1 = m.getAddress().find_last_of("/");
+        iNote = stoi(m.getAddress().substr(iPos1+1));
         //cout << "something something";
     }catch(...){
         //cout << "catch something";
@@ -499,11 +506,23 @@ void ofApp::processOSC_ControlChange(ofxOscMessage m){
     
     try{
         //----von vorne
+        /*
         iPos = ofToLower(m.getAddress()).find("controlchange/");
         m.setAddress(m.getAddress().substr(iPos+14));
         iPos = m.getAddress().find_last_of("/");
         iChannel = stoi(m.getAddress().substr(iPos-1));
-        
+        */
+
+        //----von vorne
+        iPos1 = ofToLower(m.getAddress()).find("controlchange/");
+        m.setAddress( m.getAddress().substr(iPos1+14) );
+        iPos2 = m.getAddress().find_last_of("/");
+        string sChannel = m.getAddress().substr(iPos1-1, iPos2);
+        iChannel = stoi(m.getAddress().substr(iPos1-1, iPos2));
+        if((iChannel<1)||(iChannel>16)){
+            return;
+        }
+
     }catch(...){
         return;
     }

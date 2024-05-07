@@ -6,7 +6,7 @@ int main( ){
     
     ofGLFWWindowSettings settings;
     settings.resizable = false;
-    settings.setSize(600, 450);
+    settings.setSize(1000, 1200);
     ofCreateWindow(settings);
     return ofRunApp(new ofApp);
     
