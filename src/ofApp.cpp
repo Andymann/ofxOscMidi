@@ -176,7 +176,7 @@ void ofApp::addLog(string p){
 
 void ofApp::showLog(){
     string sTmp;
-    string sOscInfo="OSC Format: NoteOn/Channel/Pitch  ControlChange/Channel/Value\n\r";
+    string sOscInfo="OSC Format: noteOn/Channel/Pitch  ControlChange/Channel/Value\n\r";
     sOscInfo += "OSC In Port:" + ofToString(incomingPortOsc) + "   OSC Out Port:" + ofToString(outGoingPortOsc) + " (see settings.xml)";
     font.drawString(sOscInfo, 10,cmbNetwork->getY() + 100);
     
@@ -205,7 +205,8 @@ void ofApp::saveSettings(){
     
     xmlSettings.setValue("oscNormalize", bNormalizeOsc ? "true" : "false");
         
-    xmlSettings.saveFile();
+    //xmlSettings.saveFile();
+    xmlSettings.save();
 }
 
 void ofApp::onButtonEvent(ofxDatGuiButtonEvent e){
@@ -340,7 +341,7 @@ void ofApp::processMidi_NoteOn(ofxMidiMessage& message){
         //sMidiThruMsg = "Midi Thru set to " + LBL_NONE;
     }
     
-    m.setAddress("/NoteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
+    m.setAddress("/noteOn/" + ofToString(message.channel) + "/" + ofToString(message.pitch));
     
     if(bNormalizeOsc){
         m.addFloatArg(message.velocity/127.);

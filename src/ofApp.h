@@ -34,7 +34,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener{
         void exit();
 
         ofTrueTypeFont font;
-        string TITLE = "ofxOscMidi v0.6";
+        string TITLE = "ofxOscMidi v0.7";
         string txtMsg = "www.Andyland.info";
     
     string sMidiInPort;
