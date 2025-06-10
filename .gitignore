@@ -1,3 +1,4 @@
 .DS_Store
 ./bin/ofxOscMidi.app/
+./bin/.DS_Store
 ./obj/osx/Release/
