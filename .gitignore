@@ -1,6 +1,6 @@
 .DS_Store
-./bin/ofxOscMidi.app/
-./bin/.DS_Store
-./bin/data/.DS_Store
-./bin/data/ofxbraitsch/.DS_Store
-./obj/osx/Release/
+/bin/ofxOscMidi.app/
+/bin/.DS_Store
+/bin/data/.DS_Store
+/bin/data/ofxbraitsch/.DS_Store
+/obj/osx/Release/
