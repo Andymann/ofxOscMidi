@@ -45,5 +45,5 @@ cd ../apps/myApps/
 git clone https://github.com/Andymann/ofxOscMidi.git  
 cd ofxOscMidi/  
 echo y | rm -r ./bin/ofxMidiClockAbletonLink.app  
-make clean && make && make RunRelease  
+make clean && make && make RunRelease &  
 open ./bin  
