@@ -31,7 +31,7 @@ These instructions are tested on MacOS 'Big Sur' and above.
 They are basically copy-pasted from https://github.com/Andymann/ofxMidiClockAbletonLink with the important bits adjusted.  
 They will download and prepare openframeworks v0.12.0 on your machine, download all dependencies and build and run ofxOscMidi. (You only have to do this once. When all instructions finished successfully the ofxOscMidi.app can be found in the /bin  subdirectory.)  
   
-<nobr>export OFURL=https://github.com/openframeworks/openFrameworks/releases/download/0.12.0/of_v0.12.0_osx_release.zip</nobr>  
+<nobr>export OFURL=https://github.com/openframeworks/openFrameworks/releases/download/0.12.0/of_v0.12.0_osx_release.zip</nobr></br>
 curl -k -L -o ofx.zip \$OFURL  
 unzip ofx.zip  
 rm ofx.zip  
