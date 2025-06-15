@@ -41,7 +41,7 @@ cd openFrameworks/
 export OF_ROOT=$(pwd)  
 cd addons/  
 git clone https://github.com/braitsch/ofxDatGui  
-gi clone https://github.com/danomatika/ofxMidi  
+git clone https://github.com/danomatika/ofxMidi  
 git clone https://github.com/bakercp/ofxNetworkUtils  
 cd ../apps/myApps/  
 git clone https://github.com/Andymann/ofxOscMidi.git  
